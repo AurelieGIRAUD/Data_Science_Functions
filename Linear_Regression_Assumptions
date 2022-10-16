@@ -1,0 +1,49 @@
+# Check Normality
+
+def normal_test(data, col):
+    """ The Shapiro-Wilk test tests the null hypothesis that the data was drawn from a normal distribution.
+    If the p-value is below 0.05, we reject the null hypothesis in favor of the alternative: this means that the distribution is not following a normal distribution"""
+    
+    X = np.array(data[col])
+    shapiro_test = st.shapiro(X)
+    p = shapiro_test.pvalue
+    
+    return p
+    
+# Check Homoscedasticity
+
+def homoscedasticity_test(model):
+    '''
+    Function for testing the homoscedasticity of residuals.
+    It plots residuals and standardized residuals vs. fitted values and runs Breusch-Pagan and Goldfeld-Quandt tests.
+    
+    Args:
+    * model - fitted OLS model from statsmodels
+    '''
+    fitted_vals = model.predict()
+    resids = model.resid
+    resids_standardized = model.get_influence().resid_studentized_internal
+
+    fig, ax = plt.subplots(1,2, figsize=(10,5))
+
+    sns.regplot(x=fitted_vals, y=resids, lowess=True, ax=ax[0], line_kws={'color': 'red'})
+    ax[0].set_title('Residuals vs Fitted', fontsize=16)
+    ax[0].set(xlabel='Fitted Values', ylabel='Residuals')
+
+    sns.regplot(x=fitted_vals, y=np.sqrt(np.abs(resids_standardized)), lowess=True, ax=ax[1], line_kws={'color': 'red'})
+    ax[1].set_title('Scale-Location', fontsize=16)
+    ax[1].set(xlabel='Fitted Values', ylabel='sqrt(abs(Residuals))')
+
+    bp_test = pd.DataFrame(sms.het_breuschpagan(resids, model.model.exog), 
+                           columns=['value'],
+                           index=['Lagrange multiplier statistic', 'p-value', 'f-value', 'f p-value'])
+
+    gq_test = pd.DataFrame(sms.het_goldfeldquandt(resids, model.model.exog)[:-1],
+                           columns=['value'],
+                           index=['F statistic', 'p-value'])
+
+    print('\n Breusch-Pagan test ----')
+    print(bp_test)
+    print('\n Goldfeld-Quandt test ----')
+    print(gq_test)
+    print('\n Residuals plots ----')
