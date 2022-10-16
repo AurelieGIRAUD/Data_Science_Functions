@@ -49,3 +49,16 @@ def Kcluster(df_std,idx,x,weight=None):
     df_std['cluster'] = df_std['cluster'].apply(lambda x: 0 if x in small else x)   # we group all individuals or small cluster in a unique cluster     
 
     return df_std
+    
+ # Kmean application
+def Kcluster(df_std,x, weight=None):
+    km = KMeans(n_clusters=x,n_init=25, max_iter = 1000, random_state= 10)
+    
+    if weight is not None: 
+        weight = np.array(weight.astype(float))
+        
+    km = km.fit(df_std,sample_weight= weight)
+    predicted_km= km.predict(df_std,sample_weight= weight)
+    df_std['cluster'] = km.labels_
+
+    return df_std
