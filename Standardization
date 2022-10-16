@@ -1,0 +1,11 @@
+# Standardization Function
+
+from sklearn.preprocessing import StandardScaler
+
+def standard(df, idxcol):
+    df_std = df.copy()
+    df_std = df_std.set_index(idxcol) # set a column to exclude from the standardization
+    mask = df_std.columns
+    df_std[mask] = StandardScaler().fit_transform(df_std[mask])
+
+    return df_std
