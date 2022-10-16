@@ -1,0 +1,51 @@
+# Elbow plot to find number of clusters
+
+n_clusters=30
+cost=[]
+mask = df.columns[1:] # Drop the first column with the ID
+
+for i in range(1,n_clusters):
+    kmean= KMeans(i)
+    kmean.fit(df[mask])
+    cost.append(kmean.inertia_)  
+    
+plt.figure(figsize=(10,6))
+plt.plot(cost, 'bx-')
+plt.xlabel('Number of clusters')
+plt.ylabel('inertie')
+plt.show()
+
+# Find the number of clusters with the silhouette coefficient method
+score = [] 
+
+for n_cluster in range(2, 15):
+    score.append( 
+        silhouette_score(df_out, KMeans(n_clusters = n_cluster).fit_predict(df_out)))
+        
+        
+# Function to apply Kmean and return the dataframe with the cluster for each row
+    # Possibility to use the weight args
+    # x = number of clusters
+
+def Kcluster(df_std,idx,x,weight=None):
+    
+    df_std = df_std.set_index(idx) # set a column to exclude from the function
+    
+    if len(df_std)<= x:
+        return
+    
+    km = KMeans(n_clusters=x,n_init=25, max_iter = 1000, random_state= 10)
+    if weight is not None: 
+        weight = np.array(weight.astype(float))
+
+    km = km.fit(df_std,sample_weight= weight)
+    predicted_km= km.predict(df_std,sample_weight= weight)
+        
+    df_std['cluster'] = km.labels_ +1 #Just set the first cluster = 1 instead of 0
+        
+    group = pd.DataFrame(df_std.index,df_std.cluster)
+    count = group.groupby(group.index).count()
+    small = list(count[count.values <= x].index)
+    df_std['cluster'] = df_std['cluster'].apply(lambda x: 0 if x in small else x)   # we group all individuals or small cluster in a unique cluster     
+
+    return df_std
